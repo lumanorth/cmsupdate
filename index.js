@@ -110,3 +110,5 @@ async function cache(model) {
 for (let model of cms.models) {
     await cache(model)
 }
+
+console.log('cmsupdate complete 🏁')
