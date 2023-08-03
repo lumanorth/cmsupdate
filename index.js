@@ -63,7 +63,7 @@ async function recursiveDownloadImages(obj, config) {
                     else {
                         fs.mkdirSync(path.dirname(lpath), { recursive: true })
                         
-                        let maxWidth = config.imageWidth ? config.imageWidth : 10000
+                        let maxWidth = config.imageWidth ? config.imageWidth : 256 // restrict image size
                         let k = await axios.get(`/assets/image/${val._id}`, { params: { w: maxWidth } })
                         k = await axios.get(k.data, { responseType: 'arraybuffer' })
                         fs.writeFileSync(lpath, k.data)
