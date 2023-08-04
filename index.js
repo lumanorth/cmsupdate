@@ -81,7 +81,7 @@ async function recursiveDownloadImages(obj, config) {
                     delete val.title
                 }
                 else if ('_model' in val && '_id' in val) {
-                    obj[key] = val.name
+                    obj[key] = val.name || val.slug
                 }
                 else {
                     await recursiveDownloadImages(obj[key], config)
@@ -109,6 +109,7 @@ async function cache(model) {
         let data = (await axios.get(`/content/${item}/${model.name}`, { params: { populate: 1 } })).data
     
         if (model.type === 'singleton') {
+            console.log(JSON.stringify(data, null, 4))
             await recursiveDownloadImages(data, { name: model.name,  ...model.config })    
         }
         else {
