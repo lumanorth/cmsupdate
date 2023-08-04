@@ -63,7 +63,7 @@ async function recursiveDownloadImages(obj, config) {
                     else {
                         fs.mkdirSync(path.dirname(lpath), { recursive: true })
                         
-                        let maxWidth = config.imageWidth ? config.imageWidth : 256 // restrict image size
+                        let maxWidth = config.imageWidth ? config.imageWidth : 256
                         let k = await axios.get(`/assets/image/${val._id}`, { params: { w: maxWidth } })
                         k = await axios.get(k.data, { responseType: 'arraybuffer' })
                         fs.writeFileSync(lpath, k.data)
@@ -92,19 +92,33 @@ async function recursiveDownloadImages(obj, config) {
 }
 
 async function cache(model) {
-    const item = model.type === 'singleton' ? 'item' : 'items'
-    let data = (await axios.get(`/content/${item}/${model.name}`, { params: { populate: 1 } })).data
 
-    if (model.type === 'singleton') {
-        await recursiveDownloadImages(data, { name: model.name,  ...model.config })    
-    }
-    else {
-        for (let item of data) {
-            await recursiveDownloadImages(item, { name: model.name,  ...model.config })
+    if (model.type === 'document') {
+        if (!fs.existsSync(`data/${model.name}`)) {
+            fs.mkdirSync(`data/${model.name}`, { recursive: true })
+        }
+        let items = (await axios.get(`/content/items/${model.name}`, { params: { fields: JSON.stringify({ id: true }) } })).data
+        for (let item of items) {
+            let data = (await axios.get(`/content/item/${model.name}/${item._id}`, { params: { populate: 1 } })).data
+            await recursiveDownloadImages(data, { name: model.name,  ...model.config })
+            fs.writeFileSync(`data/${model.name}/${data.slug}.json`, JSON.stringify(data, null, 2))
         }
     }
-
-    fs.writeFileSync(`src/${model.name}.json`, JSON.stringify(data, null, 2))
+    else {
+        const item = model.type === 'singleton' ? 'item' : 'items'
+        let data = (await axios.get(`/content/${item}/${model.name}`, { params: { populate: 1 } })).data
+    
+        if (model.type === 'singleton') {
+            await recursiveDownloadImages(data, { name: model.name,  ...model.config })    
+        }
+        else {
+            for (let item of data) {
+                await recursiveDownloadImages(item, { name: model.name,  ...model.config })
+            }
+        }
+    
+        fs.writeFileSync(`data/${model.name}.json`, JSON.stringify(data, null, 2))
+    }
 } 
 
 for (let model of cms.models) {
