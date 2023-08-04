@@ -109,7 +109,7 @@ async function cache(model) {
         let data = (await axios.get(`/content/${item}/${model.name}`, { params: { populate: 1 } })).data
     
         if (model.type === 'singleton') {
-            console.log(JSON.stringify(data, null, 4))
+            // console.log(JSON.stringify(data, null, 4))
             await recursiveDownloadImages(data, { name: model.name,  ...model.config })    
         }
         else {
