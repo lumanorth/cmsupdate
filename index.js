@@ -15,12 +15,23 @@ if (fs.existsSync('cmscache.json')) {
 axios.defaults.baseURL = cms.host + `/:${cms.tenant}/api`
 axios.defaults.headers.common['api-key'] = cms.key
 
-async function recursiveDownloadImages(obj, config) {
+async function recursiveDownloadImages(obj, config, level = 0) {
     if (obj.type === 'image') {
     }
     else if (typeof(obj) === 'object') {
-        for (let key of Object.keys(obj)) {
+        if (level == 0 && config.generateId) {
 
+            config.generateId = typeof(config.generateId) === 'string' ? [config.generateId] : config.generateId
+
+            let key = ''
+            for (let s of config.generateId) {
+                key += obj[s].replaceAll(' ', '-').replaceAll('#', '') + '-'
+            }
+
+            obj.id = encodeURIComponent(key.toLowerCase()) + obj['_id']
+        }
+
+        for (let key of Object.keys(obj)) {
             if (key[0] === '_') {
                 delete obj[key]
                 continue
@@ -84,7 +95,7 @@ async function recursiveDownloadImages(obj, config) {
                     obj[key] = val.name || val.slug
                 }
                 else {
-                    await recursiveDownloadImages(obj[key], config)
+                    await recursiveDownloadImages(obj[key], config, level + 1)
                 }
             }
         }
