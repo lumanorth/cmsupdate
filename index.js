@@ -19,16 +19,22 @@ async function recursiveDownloadImages(obj, config, level = 0) {
     if (obj.type === 'image') {
     }
     else if (typeof(obj) === 'object') {
-        if (level == 0 && config.generateId) {
+        if (level == 0 && config.generate) {
+            if (config.generate.id) {
+                const idPart = typeof(config.generate.id) === 'string' ? [config.generate.id] : config.generate.id
 
-            config.generateId = typeof(config.generateId) === 'string' ? [config.generateId] : config.generateId
-
-            let key = ''
-            for (let s of config.generateId) {
-                key += obj[s].replaceAll(' ', '-').replaceAll('#', '') + '-'
+                let key = ''
+                for (let s of idPart) {
+                    key += obj[s].replaceAll(' ', '-').replaceAll('/', '-').replaceAll('#', '') + '-'
+                }
+    
+                obj.id = encodeURIComponent(key.toLowerCase()) + obj['_id']
             }
-
-            obj.id = encodeURIComponent(key.toLowerCase()) + obj['_id']
+            
+            if (config.generate.timeStamps) {
+                obj.createdAt = (new Date(obj['_created'] * 1000)).toISOString()
+                obj.modifiedAt = (new Date(obj['_modified'] * 1000)).toISOString()
+            }
         }
 
         for (let key of Object.keys(obj)) {
