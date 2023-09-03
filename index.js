@@ -110,23 +110,7 @@ async function recursiveDownloadImages(obj, config, level = 0) {
 
 async function cache(model) {
 
-    if (model == null) {
-        let items = (await axios.get(`/pages/pages`, { params: { fields: JSON.stringify({ id: true }) } })).data
-        if (items.length == 0) { return }
-
-        if (!fs.existsSync('src/content/pages')) {
-            fs.mkdirSync('src/content/pages', { recursive: true })
-        }
-        
-        for (let item of items) {
-            let data = (await axios.get(`/pages/page/${item._id}`, { params: { populate: 1 } })).data
-            data.route = data._routes.default
-            const path = data._routes.default.substring(1).replaceAll('/', '---')
-            await recursiveDownloadImages(data, { name: 'page', config: { } })
-            fs.writeFileSync(`src/content/pages/${path}.json`, JSON.stringify(data, null, 2))
-        }
-    }
-    else if (model.type === 'document') {
+    if (model.type === 'document') {
         if (!fs.existsSync(`src/content/${model.name}`)) {
             fs.mkdirSync(`src/content/${model.name}`, { recursive: true })
         }
@@ -154,8 +138,6 @@ async function cache(model) {
         fs.writeFileSync(`src/data/${model.name}.json`, JSON.stringify(data, null, 2))
     }
 } 
-
-await cache(null)
 
 for (let model of cms.models) {
     await cache(model)
