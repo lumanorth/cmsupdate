@@ -161,9 +161,4 @@ for (let model of cms.models) {
     await cache(model)
 }
 
-if (fs.existsSync('cmspost.js')) {
-    let cmsPost = await import ('../../cmspost.js')
-    await cmsPost.default()
-}
-
-console.log('cmsupdate complete 🏁')
+console.log('🚀 cmsupdate complete 🏁')
