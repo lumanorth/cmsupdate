@@ -119,7 +119,7 @@ async function cache(model) {
         }
         
         for (let item of items) {
-            let data = (await axios.get(`/pages/page/${item._id}`, { params: { populate: 1 } })).data
+            let data = (await axios.get(`/pages/page/${item._id}`, { params: { populate: 100 } })).data
             data.route = data._routes.default
             const path = data._routes.default.substring(1).replaceAll('/', '---')
             await recursiveDownloadImages(data, { name: 'page', config: { } })
@@ -132,7 +132,7 @@ async function cache(model) {
         }
         let items = (await axios.get(`/content/items/${model.name}`, { params: { fields: JSON.stringify({ id: true }) } })).data
         for (let item of items) {
-            let data = (await axios.get(`/content/item/${model.name}/${item._id}`, { params: { populate: 1 } })).data
+            let data = (await axios.get(`/content/item/${model.name}/${item._id}`, { params: { populate: 100 } })).data
             await recursiveDownloadImages(data, { name: model.name,  ...model.config })
             fs.writeFileSync(`src/content/${model.name}/${data.slug}.json`, JSON.stringify(data, null, 2))
         }
