@@ -118,12 +118,23 @@ async function cache(model) {
             fs.mkdirSync('src/content/pages', { recursive: true })
         }
         
+        const existingFiles = fs.readdirSync('src/content/pages')
+
         for (let item of items) {
             let data = (await axios.get(`/pages/page/${item._id}`, { params: { populate: 100 } })).data
             data.route = data._routes.default
             const path = data._routes.default.substring(1).replaceAll('/', '---')
             await recursiveDownloadImages(data, { name: 'page', config: { } })
             fs.writeFileSync(`src/content/pages/${path}.json`, JSON.stringify(data, null, 2))
+            
+            let idx = existingFiles.indexOf(`${path}.json`)
+            if (idx != -1) {
+                existingFiles.splice(idx, 1)
+            }
+        }
+
+        for (let item of existingFiles) {
+            fs.rmSync(`src/content/pages/${item}`)
         }
     }
     else if (model.type === 'document') {
