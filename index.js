@@ -80,7 +80,7 @@ async function recursiveDownloadImages(obj, config, level = 0) {
                     else {
                         fs.mkdirSync(path.dirname(lpath), { recursive: true })
                         
-                        let maxWidth = config.imageWidth ? config.imageWidth : 256
+                        let maxWidth = config.imageWidth ? config.imageWidth : 1024
                         let k = await axios.get(`/assets/image/${val._id}`, { params: { w: maxWidth } })
                         k = await axios.get(k.data, { responseType: 'arraybuffer' })
                         fs.writeFileSync(lpath, k.data)
@@ -118,12 +118,23 @@ async function cache(model) {
             fs.mkdirSync('src/content/pages', { recursive: true })
         }
         
+        const existingFiles = fs.readdirSync('src/content/pages')
+
         for (let item of items) {
-            let data = (await axios.get(`/pages/page/${item._id}`, { params: { populate: 1 } })).data
+            let data = (await axios.get(`/pages/page/${item._id}`, { params: { populate: 100 } })).data
             data.route = data._routes.default
             const path = data._routes.default.substring(1).replaceAll('/', '---').replaceAll('#', '')
             await recursiveDownloadImages(data, { name: 'page', config: { } })
             fs.writeFileSync(`src/content/pages/${path}.json`, JSON.stringify(data, null, 2))
+            
+            let idx = existingFiles.indexOf(`${path}.json`)
+            if (idx != -1) {
+                existingFiles.splice(idx, 1)
+            }
+        }
+
+        for (let item of existingFiles) {
+            fs.rmSync(`src/content/pages/${item}`)
         }
     }
     else if (model.type === 'document') {
@@ -132,7 +143,7 @@ async function cache(model) {
         }
         let items = (await axios.get(`/content/items/${model.name}`, { params: { fields: JSON.stringify({ id: true }) } })).data
         for (let item of items) {
-            let data = (await axios.get(`/content/item/${model.name}/${item._id}`, { params: { populate: 1 } })).data
+            let data = (await axios.get(`/content/item/${model.name}/${item._id}`, { params: { populate: 100 } })).data
             await recursiveDownloadImages(data, { name: model.name,  ...model.config })
             fs.writeFileSync(`src/content/${model.name}/${data.slug}.json`, JSON.stringify(data, null, 2))
         }
@@ -161,9 +172,4 @@ for (let model of cms.models) {
     await cache(model)
 }
 
-if (fs.existsSync('cmspost.js')) {
-    let cmsPost = await import ('../../cmspost.js')
-    await cmsPost.default()
-}
-
-console.log('cmsupdate complete 🏁')
+console.log('🚀 cmsupdate complete 🏁')
