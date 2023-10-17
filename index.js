@@ -25,7 +25,7 @@ async function recursiveDownloadImages(obj, config, level = 0) {
 
                 let key = ''
                 for (let s of idPart) {
-                    key += obj[s].replaceAll(' ', '-').replaceAll('/', '-').replaceAll('#', '') + '-'
+                    key += obj[s].replaceAll(' ', '-').replaceAll('/', '-').replaceAll('#', '').replaceAll('?', '') + '-'
                 }
     
                 obj.id = encodeURIComponent(key.toLowerCase()) + obj['_id']
@@ -123,7 +123,7 @@ async function cache(model) {
         for (let item of items) {
             let data = (await axios.get(`/pages/page/${item._id}`, { params: { populate: 100 } })).data
             data.route = data._routes.default
-            const path = data._routes.default.substring(1).replaceAll('/', '---').replaceAll('#', '')
+            const path = data._routes.default.substring(1).replaceAll('/', '---').replaceAll('#', '').replaceAll('?', '')
             await recursiveDownloadImages(data, { name: 'page', config: { } })
             fs.writeFileSync(`src/content/pages/${path}.json`, JSON.stringify(data, null, 2))
             
