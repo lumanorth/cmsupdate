@@ -142,10 +142,19 @@ async function cache(model) {
             fs.mkdirSync(`src/content/${model.name}`, { recursive: true })
         }
         let items = (await axios.get(`/content/items/${model.name}`, { params: { fields: JSON.stringify({ id: true }) } })).data
+        let usedFiles = []
         for (let item of items) {
             let data = (await axios.get(`/content/item/${model.name}/${item._id}`, { params: { populate: 100 } })).data
             await recursiveDownloadImages(data, { name: model.name,  ...model.config })
             fs.writeFileSync(`src/content/${model.name}/${data.slug}.json`, JSON.stringify(data, null, 2))
+            usedFiles.push(data.slug + '.json')
+        }
+        const existingModelFiles = fs.readdirSync(`src/content/${model.name}`)
+        for (let ef of existingModelFiles)
+        {
+            if (usedFiles.findIndex(ef) == -1) {
+                fs.rmSync(`src/content/${model.name}/${ef}`)
+            }
         }
     }
     else {
