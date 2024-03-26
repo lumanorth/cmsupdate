@@ -152,7 +152,7 @@ async function cache(model) {
         const existingModelFiles = fs.readdirSync(`src/content/${model.name}`)
         for (let ef of existingModelFiles)
         {
-            if (usedFiles.findIndex(ef) == -1) {
+            if (usedFiles.findIndex(a => a == ef) == -1) {
                 fs.rmSync(`src/content/${model.name}/${ef}`)
             }
         }
