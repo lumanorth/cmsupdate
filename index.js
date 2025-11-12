@@ -123,7 +123,7 @@ async function cache(model) {
         for (let item of items) {
             let data = (await axios.get(`/pages/page/${item._id}`, { params: { populate: 100 } })).data
             data.route = data._routes.default
-            const path = data._routes.default.substring(1).replaceAll('/', '---').replaceAll('#', '').replaceAll('?', '')
+            const path = data._routes.default.substring(1).replaceAll('/', '---').replaceAll('#', '').replaceAll('?', '').trim()
             await recursiveDownloadImages(data, { name: 'page', config: { } })
             fs.writeFileSync(`src/content/pages/${path}.json`, JSON.stringify(data, null, 2))
             
@@ -138,22 +138,24 @@ async function cache(model) {
         }
     }
     else if (model.type === 'document') {
-        if (!fs.existsSync(`src/content/${model.name}`)) {
-            fs.mkdirSync(`src/content/${model.name}`, { recursive: true })
+        const modelDir = model.name.trim()
+        if (!fs.existsSync(`src/content/${modelDir}`)) {
+            fs.mkdirSync(`src/content/${modelDir}`, { recursive: true })
         }
         let items = (await axios.get(`/content/items/${model.name}`, { params: { fields: JSON.stringify({ id: true }) } })).data
         let usedFiles = []
         for (let item of items) {
             let data = (await axios.get(`/content/item/${model.name}/${item._id}`, { params: { populate: 100 } })).data
             await recursiveDownloadImages(data, { name: model.name,  ...model.config })
-            fs.writeFileSync(`src/content/${model.name}/${data.slug}.json`, JSON.stringify(data, null, 2))
-            usedFiles.push(data.slug + '.json')
+            const fileName = data.slug.trim()
+            fs.writeFileSync(`src/content/${modelDir}/${fileName}.json`, JSON.stringify(data, null, 2))
+            usedFiles.push(fileName + '.json')
         }
-        const existingModelFiles = fs.readdirSync(`src/content/${model.name}`)
+        const existingModelFiles = fs.readdirSync(`src/content/${modelDir}`)
         for (let ef of existingModelFiles)
         {
             if (usedFiles.findIndex(a => a == ef) == -1) {
-                fs.rmSync(`src/content/${model.name}/${ef}`)
+                fs.rmSync(`src/content/${modelDir}/${ef}`)
             }
         }
     }
@@ -171,7 +173,8 @@ async function cache(model) {
             }
         }
     
-        fs.writeFileSync(`src/data/${model.name}.json`, JSON.stringify(data, null, 2))
+        const modelFile = model.name.trim()
+        fs.writeFileSync(`src/data/${modelFile}.json`, JSON.stringify(data, null, 2))
     }
 } 
 
